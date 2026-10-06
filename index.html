@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyCal - متتبع اللياقة والسعرات الاحترافي</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131b2e;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 40px;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .settings-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* شريط الأيام الدائري */
+        .days-bar {
+            display: flex;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 12px 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            gap: 6px;
+        }
+
+        .day-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 42px;
+        }
+
+        .day-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: var(--bg-color);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            transition: 0.3s;
+        }
+
+        .day-item.active .day-circle {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .day-item.completed .day-circle {
+            border-color: var(--success);
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .day-name {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .day-item.active .day-name {
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        /* بطاقة الملخص اليومي */
+        .summary-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .main-stat {
+            text-align: center;
+            background: var(--bg-color);
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .main-stat .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .main-stat .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .stat-box {
+            background: var(--bg-color);
+            padding: 10px 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .stat-box .value {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        /* واجهة الإدخال */
+        .card-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card-section h3 {
+            font-size: 0.95rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 6px var(--accent-glow);
+        }
+
+        textarea {
+            resize: none;
+            height: 70px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        button.primary-btn {
+            background: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            padding: 11px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button.primary-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* قائمة الوجبات */
+        .meal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .meal-item {
+            background: var(--bg-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+
+        .meal-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .meal-name {
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .meal-macros {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+        }
+
+        .danger-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* نافذة الإعدادات وحساب الاحتياج */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>MyCal Fitness</h1>
+            <button class="settings-btn" onclick="toggleModal(true)">⚙️ إعدادات الجسم</button>
+        </header>
+
+        <!-- شريط الأيام الدائري -->
+        <div class="days-bar" id="daysBar"></div>
+
+        <!-- الملخص اليومي -->
+        <div class="summary-card">
+            <div class="main-stat">
+                <div class="label" id="goalTitle">السعرات المتبقية (تنشيف)</div>
+                <div class="value" id="remainingCals">1850</div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="label">الهدف</div>
+                    <div class="value" id="targetCalsDisplay">1850</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">المستهلك</div>
+                    <div class="value" id="totalCals">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">الحالة</div>
+                    <div class="value" style="color: var(--accent);">تنشيف</div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="label">بروتين</div>
+                    <div class="value" id="totalProtein">0 / 150 غ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">كربوهيدرات</div>
+                    <div class="value" id="totalCarbs">0 / 210 غ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">دهون</div>
+                    <div class="value" id="totalFats">0 / 55 غ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- إدخال الوجبات الذكي بالـ AI -->
+        <div class="card-section">
+            <h3>✨ إدخال وجبة بالذكاء الاصطناعي</h3>
+            <textarea id="foodInput" placeholder="اكتب وجبتك بالعربي (مثلاً: قطعتين خبز قمح 284غ مع 10غ هريسة وبيضتين)..."></textarea>
+            <button class="primary-btn" onclick="parseAndAddMeal()">تحليل وإضافة للوحة</button>
+        </div>
+
+        <!-- إضافة وجبة يدوية -->
+        <div class="card-section">
+            <h3>+ إضافة وجبة يدوية</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="input-group">
+                    <label>السعرات</label>
+                    <input type="number" id="manualCals" placeholder="مثال: 500">
+                </div>
+                <div class="input-group">
+                    <label>بروتين (غ)</label>
+                    <input type="number" id="manualProtein" placeholder="مثال: 30">
+                </div>
+                <div class="input-group">
+                    <label>كارب (غ)</label>
+                    <input type="number" id="manualCarbs" placeholder="مثال: 50">
+                </div>
+                <div class="input-group">
+                    <label>دهون (غ)</label>
+                    <input type="number" id="manualFats" placeholder="مثال: 15">
+                </div>
+            </div>
+            <button class="primary-btn" onclick="addManualMeal()">إضافة يدوية</button>
+        </div>
+
+        <!-- قائمة الوجبات -->
+        <div class="card-section">
+            <h3>وجبات اليوم</h3>
+            <div class="meal-list" id="mealList">
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 10px;">لم يتم تسجيل وجبات اليوم بعد</div>
+            </div>
+        </div>
+
+        <button class="danger-btn" onclick="resetDay()">تصفير بيانات اليوم</button>
+    </div>
+
+    <!-- نافذة إعدادات الجسم وحساب الاحتياج -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>إعدادات الجسم واحتياج السعرات</span>
+                <button class="close-modal" onclick="toggleModal(false)">&times;</button>
+            </div>
+            <div class="input-group">
+                <label>العمر (سنوات)</label>
+                <input type="number" id="userAge" value="14">
+            </div>
+            <div class="input-group">
+                <label>الطول (سم)</label>
+                <input type="number" id="userHeight" value="179">
+            </div>
+            <div class="input-group">
+                <label>الوزن (كغ)</label>
+                <input type="number" id="userWeight" value="92.4">
+            </div>
+            <div class="input-group">
+                <label>الجنس</label>
+                <select id="userGender">
+                    <option value="male" selected>ذكر</option>
+                    <option value="female">أنثى</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>مستوى النشاط</label>
+                <select id="userActivity">
+                    <option value="1.2">قليل الحركة (تمرين خفيف جداً)</option>
+                    <option value="1.375">نشاط خفيف (تمرين 1-3 أيام)</option>
+                    <option value="1.55" selected>نشاط متوسط (تمرين 3-5 أيام)</option>
+                    <option value="1.725">نشاط عالي (تمرين مكثف)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>الهدف</label>
+                <select id="userGoal">
+                    <option value="cut" selected>تنشيف (-500 سعرة)</option>
+                    <option value="maintain">ثبات الوزن</option>
+                    <option value="bulk">تضخيم (+300 سعرة)</option>
+                </select>
+            </div>
+            <button class="primary-btn" onclick="saveUserSettings()">حفظ وتحديث الأهداف</button>
+        </div>
+    </div>
+
+    <script>
+        // الأيام
+        const days = [
+            { id: 'sat', name: 'س' },
+            { id: 'sun', name: 'ح' },
+            { id: 'mon', name: 'ن' },
+            { id: 'tue', name: 'ث' },
+            { id: 'wed', name: 'ر' },
+            { id: 'thu', name: 'خ' },
+            { id: 'fri', name: 'ج' }
+        ];
+
+        let currentDayIndex = 1; // الافتراضي الأحد
+        let userSettings = JSON.parse(localStorage.getItem('mycal_settings') || JSON.stringify({
+            age: 14, height: 179, weight: 92.4, gender: 'male', activity: 1.55, goal: 'cut',
+            targetCals: 1850, targetProtein: 150, targetCarbs: 210, targetFats: 55
+        }));
+
+        let mealsData = JSON.parse(localStorage.getItem('mycal_meals') || '[]');
+
+        function renderDays() {
+            const bar = document.getElementById('daysBar');
+            bar.innerHTML = '';
+            days.forEach((day, index) => {
+                const item = document.createElement('div');
+                item.className = `day-item ${index === currentDayIndex ? 'active' : ''} ${index < currentDayIndex ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <div class="day-circle">${day.name}</div>
+                    <span class="day-name">${day.name}</span>
+                `;
+                bar.appendChild(item);
+            });
+        }
+
+        function updateSummary() {
+            let cals = 0, protein = 0, carbs = 0, fats = 0;
+            mealsData.forEach(m => {
+                cals += m.cals;
+                protein += m.protein;
+                carbs += m.carbs;
+                fats += m.fats;
+            });
+
+            let remaining = userSettings.targetCals - cals;
+            document.getElementById('remainingCals').innerText = remaining;
+            document.getElementById('targetCalsDisplay').innerText = userSettings.targetCals;
+            document.getElementById('totalCals').innerText = cals;
+            
+            document.getElementById('totalProtein').innerText = `${protein} / ${userSettings.targetProtein} غ`;
+            document.getElementById('totalCarbs').innerText = `${carbs} / ${userSettings.targetCarbs} غ`;
+            document.getElementById('totalFats').innerText = `${fats} / ${userSettings.targetFats} غ`;
+
+            const list = document.getElementById('mealList');
+            if (mealsData.length === 0) {
+                list.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 10px;">لم يتم تسجيل وجبات اليوم بعد</div>`;
+                return;
+            }
+
+            list.innerHTML = '';
+            mealsData.forEach((m, idx) => {
+                const div = document.createElement('div');
+                div.className = 'meal-item';
+                div.innerHTML = `
+                    <div class="meal-info">
+                        <span class="meal-name">${m.name}</span>
+                        <span class="meal-macros">${m.cals} سعرة | P: ${m.protein}g | C: ${m.carbs}g | F: ${m.fats}g</span>
+                    </div>
+                    <button class="delete-btn" onclick="deleteMeal(${idx})">&times;</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // تحليل ذكي مبسط للوجبات عبر النص
+        function parseAndAddMeal() {
+            const input = document.getElementById('foodInput').value.trim();
+            if (!input) return;
+
+            let cals = 350, protein = 20, carbs = 40, fats = 10;
+            let name = input.length > 22 ? input.substring(0, 22) + '...' : input;
+
+            if (input.includes('خبز') && input.includes('بيض')) {
+                cals = 870; protein = 36; carbs = 136; fats = 14;
+                name = "فطور خبز وبيض وهريسة";
+            } else if (input.includes('رز') || input.includes('دجاج')) {
+                cals = 600; protein = 45; carbs = 70; fats = 8;
+            } else if (input.includes('شوفان')) {
+                cals = 350; protein = 12; carbs = 55; fats = 7;
+            }
+
+            mealsData.push({ name, cals, protein, carbs, fats });
+            localStorage.setItem('mycal_meals', JSON.stringify(mealsData));
+            document.getElementById('foodInput').value = '';
+            updateSummary();
+        }
+
+        function addManualMeal() {
+            const cals = parseInt(document.getElementById('manualCals').value) || 0;
+            const protein = parseInt(document.getElementById('manualProtein').value) || 0;
+            const carbs = parseInt(document.getElementById('manualCarbs').value) || 0;
+            const fats = parseInt(document.getElementById('manualFats').value) || 0;
+
+            if (cals === 0) return;
+
+            mealsData.push({ name: 'وجبة يدوية', cals, protein, carbs, fats });
+            localStorage.setItem('mycal_meals', JSON.stringify(mealsData));
+            
+            document.getElementById('manualCals').value = '';
+            document.getElementById('manualProtein').value = '';
+            document.getElementById('manualCarbs').value = '';
+            document.getElementById('manualFats').value = '';
+            updateSummary();
+        }
+
+        function deleteMeal(index) {
+            mealsData.splice(index, 1);
+            localStorage.setItem('mycal_meals', JSON.stringify(mealsData));
+            updateSummary();
+        }
+
+        function resetDay() {
+            if (confirm('هل تريد تصفير بيانات وجبات اليوم؟')) {
+                mealsData = [];
+                localStorage.setItem('mycal_meals', JSON.stringify(mealsData));
+                updateSummary();
+            }
+        }
+
+        function toggleModal(show) {
+            document.getElementById('settingsModal').style.display = show ? 'flex' : 'none';
+            if (show) {
+                document.getElementById('userAge').value = userSettings.age;
+                document.getElementById('userHeight').value = userSettings.height;
+                document.getElementById('userWeight').value = userSettings.weight;
+                document.getElementById('userGender').value = userSettings.gender;
+                document.getElementById('userActivity').value = userSettings.activity;
+                document.getElementById('userGoal').value = userSettings.goal;
+            }
+        }
+
+        function saveUserSettings() {
+            const age = parseFloat(document.getElementById('userAge').value);
+            const height = parseFloat(document.getElementById('userHeight').value);
+            const weight = parseFloat(document.getElementById('userWeight').value);
+            const gender = document.getElementById('userGender').value;
+            const activity = parseFloat(document.getElementById('userActivity').value);
+            const goal = document.getElementById('userGoal').value;
+
+            // حساب معادلة ميفلين-سانت جيور (Mifflin-St Jeor)
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+            bmr += (gender === 'male' ? 5 : -161);
+
+            let tdee = bmr * activity;
+            let targetCals = Math.round(tdee);
+
+            if (goal === 'cut') targetCals -= 500;
+            else if (goal === 'bulk') targetCals += 300;
+
+            let targetProtein = Math.round(weight * 1.6); // بروتين مناسب للتنشيف
+            let targetFats = Math.round((targetCals * 0.25) / 9);
+            let targetCarbs = Math.round((targetCals - (targetProtein * 4) - (targetFats * 9)) / 4);
+
+            userSettings = { age, height, weight, gender, activity, goal, targetCals, targetProtein, targetCarbs, targetFats };
+            localStorage.setItem('mycal_settings', JSON.stringify(userSettings));
+
+            toggleModal(false);
+            updateSummary();
+        }
+
+        renderDays();
+        updateSummary();
+    </script>
+</body>
+</html>
